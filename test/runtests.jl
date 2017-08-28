@@ -7,12 +7,11 @@ ref[:branch][2]["rate_a"] = 0.83 # line tightening
 ref = OPFRecourse.NetworkReference(ref, bus_prob = 0.95, line_prob = 0.95)
 @time ccopf = OPFRecourse.ChanceConstrainedOPF(ref, Gurobi.GurobiSolver());
 @time JuMP.solve(ccopf.model, method=:Reformulate)
-
 @time m = OPFRecourse.SingleScenarioOPF(ref, Gurobi.GurobiSolver(OutputFlag=0));
 @time JuMP.solve(m.model)
 
 ω = Distributions.MvNormal([ref.refω[i]["mean"] for i in 1:ref.nuncertain], Array(ref.sqrtΣ^2))
-nsamples = 20_000
+nsamples = 1000
 ωsamples = rand(ω, nsamples)
 status = Array{Symbol}(nsamples);
 soln_p = zeros(nsamples, ref.ngen);
@@ -47,9 +46,16 @@ end
 sample_p = Float32.(soln_p[status .== :Optimal, :])
 sample_ω = Float32.(ωsamples[:,status .== :Optimal])'
 
+@test length(collect(keys(bases))) == 1
+@test length(collect(keys(cbases))) == 1
+@test length(collect(keys(rbases))) == 1
 OPFRecourse.get_opf_solution(m, ωsamples[:,1])
 cbasis, rbasis = MathProgBase.getbasis(m.model.internalModel)
 br = OPFRecourse.BasisRecourse(ref, m, cbasis, rbasis);
-@show OPFRecourse.get_opf_solution(br, ωsamples[:,1])
-# versus optimal solution (for comparison)
-@show sample_p[1,:]
+for i in 1:noptimal
+    @test isapprox(
+        OPFRecourse.get_opf_solution(br, sample_ω[i,:]),
+        sample_p[i,:]
+    )
+end
+
