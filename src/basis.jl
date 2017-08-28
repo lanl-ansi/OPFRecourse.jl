@@ -10,16 +10,13 @@ end
 
 function BasisRecourse(ref::NetworkReference, m::SingleScenarioOPF, cbasis, rbasis)
     br = BasisRecourse(ref.ngen,Dict(),Float64[],Dict(),Matrix{Float64}(0,0),[])
-
     basic_indices = Int[]
     for i in 1:ref.ngen
         if cbasis[i] == :Basic
             push!(basic_indices, i)
         elseif cbasis[i] == :NonbasicAtLower
-            # @assert(m.model.colNames[i] == "p[$i]", m.model.colNames[i])
             br.fixed[i] = m.model.colLower[i]
         elseif cbasis[i] == :NonbasicAtUpper
-            # @assert(m.model.colNames[i] == "p[$i]", m.model.colNames[i])
             br.fixed[i] = m.model.colUpper[i]
         else
             error("Unrecognised basis status: $(cbasis[i]) at index $i")
