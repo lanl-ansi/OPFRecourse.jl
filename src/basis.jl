@@ -1,10 +1,11 @@
 mutable struct BasisRecourse
-    ngen::Int
-    fixed::Dict{Int,Float64}
-    varying::Vector{Int}
-    basiscol::Dict{Int,Int}
-    linearterms::Matrix{Float64}
-    constant::Vector{Float64}
+    ngen::Int # number of power generators (dimension of recourse)
+    fixed::Dict{Int,Float64} # values for static power (keys = index, value = generation value)
+    varying::Vector{Int} # indices for dynamic power
+    basiscol::Dict{Int,Int} # mapping from basic indices to their index in the basis
+
+    linearterms::Matrix{Float64} # coefficients for the linear terms in the recourse
+    constant::Vector{Float64} # coefficients for the constant term in the recourse
 end
 
 function BasisRecourse(ref::NetworkReference, m::SingleScenarioOPF, cbasis, rbasis)
