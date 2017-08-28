@@ -85,12 +85,12 @@ function SingleScenarioOPF(
     JuMP.@variable(model,                 ω[i in 1:ref.nuncertain])
     f = lineflow(ref, p, ω)
     JuMP.@constraints model begin
+        f .<= [rate(ref,l) for l in 1:ref.nline]
+        f .>= [-rate(ref,l) for l in 1:ref.nline]
         0 == sum(sum(p[g] for g in ref.busgens[i]) +
                  sum(ω[j] for j in 1:ref.nuncertain if ref.refω[j]["bus"] == i) -
                  ref.bus[i]["pd"] - ref.bus[i]["gs"]
                  for i in 1:ref.nbus)
-        f .<= [rate(ref,l) for l in 1:ref.nline]
-        f .>= [-rate(ref,l) for l in 1:ref.nline]
     end
     JuMP.@objective(model, Min, sum(cost(ref,i,1)*p[i] + cost(ref,i,2)*p[i] + cost(ref,i,3) for i in 1:ref.ngen))
     SingleScenarioOPF(model,p,ω)
