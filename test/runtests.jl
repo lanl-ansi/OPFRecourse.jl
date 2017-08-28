@@ -1,4 +1,4 @@
-using OPFRecourse, Gurobi, Base.Test
+using OPFRecourse, Gurobi, Distributions, Base.Test
 
 data_file = string(Pkg.dir(),"/AlternatingOPF/test/data/nesta_case30_ieee_prob.m")
 @time ref = PowerModels.build_ref(PowerModels.parse_file(data_file));
