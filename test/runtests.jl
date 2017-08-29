@@ -20,7 +20,10 @@ scenarios = OPFRecourse.OPFScenarios(ref, m, nsamples = 1000)
 br = OPFRecourse.BasisRecourse(ref, m, scenarios.cbases[1], scenarios.rbases[1]);
 for i in 1:size(scenarios.scenarios,1)
     @test isapprox(
-        OPFRecourse.get_opf_solution(br, scenarios.scenarios[i,:]),
+        OPFRecourse.reproject(
+            ref,
+            OPFRecourse.get_opf_solution(br, scenarios.scenarios[i,:])
+        ),
         scenarios.solutions[i,:],
         atol = 1e-6
     )
