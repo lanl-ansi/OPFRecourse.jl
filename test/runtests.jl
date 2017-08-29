@@ -7,6 +7,8 @@ ref[:branch][2]["rate_a"] = 0.83 # line tightening
 ref = OPFRecourse.NetworkReference(ref, bus_prob = 0.95, line_prob = 0.95)
 @time ccopf = OPFRecourse.ChanceConstrainedOPF(ref, Gurobi.GurobiSolver());
 @time JuMP.solve(ccopf.model, method=:Reformulate)
+@time fullccopf = OPFRecourse.ChanceConstrainedOPF(ref, Gurobi.GurobiSolver());
+@time JuMP.solve(fullccopf.model, method=:Reformulate)
 @time m = OPFRecourse.SingleScenarioOPF(ref, Gurobi.GurobiSolver(OutputFlag=0));
 @time JuMP.solve(m.model)
 
