@@ -1,5 +1,7 @@
 julia 0.6
+Distributions
 JuMP
 MathProgBase
+Gurobi
 PowerModels
 JuMPChance
