@@ -5,5 +5,5 @@ module OPFRecourse
     include("models.jl")
     include("basis.jl")
     include("scenarios.jl")
-
+    include("evaluate.jl")
 end
