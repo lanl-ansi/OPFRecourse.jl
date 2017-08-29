@@ -24,12 +24,25 @@ function busfromRHS(ref, p, α, omega)
     [busvalue(i) for i in 1:ref.nbus]
 end
 
+function fullbusfromRHS(ref, p, α, omega)
+    function busvalue(i)
+        result = - ref.bus[i]["pd"] - ref.bus[i]["gs"]
+        for g in ref.busgens[i]; result += p[g] - sum(α[g,j]*omega[j] for j in 1:ref.nuncertain) end
+        for j in 1:ref.nuncertain
+            (ref.refω[j]["bus"] == i) && (result += omega[j])
+        end
+        result 
+    end
+    [busvalue(i) for i in 1:ref.nbus]
+end
+
 "computes B_f*θ where B_f is the matrix of power transfer factors"
 Bftheta(ref, θ) =
     [β(ref,l)*(θ[frombus(ref,l)] - θ[tobus(ref,l)]) for l in 1:ref.nline]
 
 lineflow(ref, p, ω)    = Bftheta(ref, ref.π*busfromRHS(ref, p, ω))
 lineflow(ref, p, α, ω) = Bftheta(ref, ref.π*busfromRHS(ref, p, α, ω))
+fulllineflow(ref, p, α, ω) = Bftheta(ref, ref.π*fullbusfromRHS(ref, p, α, ω))
 
 mutable struct ChanceConstrainedOPF
     model::JuMP.Model
@@ -69,6 +82,38 @@ ChanceConstrainedOPF(filename::String; kwargs...) =
 
 ChanceConstrainedOPF(ref::Dict{Symbol,Any}; kwargs...) =
     ChanceConstrainedOPF(NetworkReference(ref); kwargs...)
+
+mutable struct FullChanceConstrainedOPF
+    model::JuMP.Model
+    p
+    α
+end
+
+function FullChanceConstrainedOPF(
+        ref::NetworkReference,
+        solver::MathProgBase.AbstractMathProgSolver
+    )
+    model = JuMPChance.ChanceModel(solver=solver)
+    JuMP.@variable(model, pmin(ref,i) <= p[i in 1:ref.ngen] <= pmax(ref,i), start=pstart(ref,i))
+    JuMP.@variable(model,                α[i in 1:ref.ngen, j in 1:ref.nuncertain] >= 0)
+    JuMPChance.@indepnormal(model,       ω[j in 1:ref.nuncertain],
+        mean=ref.refω[j]["mean"], var=ref.refω[j]["std"]^2
+    )
+    f = fulllineflow(ref, p, α, ω)
+    JuMP.@constraints model begin
+        [j in 1:ref.nuncertain], sum(α[i,j] for i in 1:ref.ngen) == 1
+    end
+    for i in 1:ref.ngen
+        JuMP.@constraint(model, p[i] - sum(α[i,j]*ω[j] for j in 1:ref.nuncertain) <= pmax(ref,i), with_probability=ref.bus_prob)
+        JuMP.@constraint(model, p[i] - sum(α[i,j]*ω[j] for j in 1:ref.nuncertain) >= pmin(ref,i), with_probability=ref.bus_prob)
+    end
+    for l in 1:ref.nline
+        JuMP.@constraint(model, f[l] <= rate(ref, l), with_probability=ref.line_prob)
+        JuMP.@constraint(model, f[l] >= -rate(ref, l), with_probability=ref.line_prob)
+    end
+    JuMP.@objective(model, Min, sum(cost(ref,i,1)*p[i] + cost(ref,i,2)*p[i] + cost(ref,i,3) for i in 1:ref.ngen))
+    FullChanceConstrainedOPF(model,p,α)
+end
 
 mutable struct SingleScenarioOPF
     model::JuMP.Model
