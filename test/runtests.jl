@@ -12,52 +12,16 @@ ref = OPFRecourse.NetworkReference(ref, bus_prob = 0.95, line_prob = 0.95)
 @time m = OPFRecourse.SingleScenarioOPF(ref, Gurobi.GurobiSolver(OutputFlag=0));
 @time JuMP.solve(m.model)
 
-ω = Distributions.MvNormal([ref.refω[i]["mean"] for i in 1:ref.nuncertain], Array(ref.sqrtΣ^2))
-nsamples = 1000
-ωsamples = rand(ω, nsamples)
-status = Array{Symbol}(nsamples);
-soln_p = zeros(nsamples, ref.ngen);
-JuMP.build(m.model);
-nv = Gurobi.num_vars(m.model.internalModel.inner)
-nc = Gurobi.num_constrs(m.model.internalModel.inner)
-cbases = Dict{NTuple{nv, Symbol},Vector{Int}}()
-rbases = Dict{NTuple{nc, Symbol},Vector{Int}}()
-bases = Dict{NTuple{nv+nc, Symbol},Vector{Int}}()
-noptimal = 0
+scenarios = OPFRecourse.OPFScenarios(ref, m, nsamples = 1000)
 
-for i in 1:nsamples
-    status[i] = OPFRecourse.get_opf_solution(m, ωsamples[:,i])
-
-    if status[i] == :Optimal
-        # if the scenario was feasible, keep track of basis
-        soln_p[i,:] = JuMP.getvalue(m.p)
-        noptimal += 1
-        cbasis, rbasis = MathProgBase.getbasis(m.model.internalModel)
-        cbasis, rbasis = tuple(cbasis...), tuple(rbasis...)
-        basis = tuple(cbasis..., rbasis...)
-        cbases[cbasis] = get(cbases, cbasis, Int[])
-        rbases[rbasis] = get(rbases, rbasis, Int[])
-        bases[basis] = get(bases, basis, Int[])
-        push!(cbases[cbasis], noptimal)
-        push!(rbases[rbasis], noptimal)
-        push!(bases[basis], noptimal)
-    end
-end
-@assert noptimal == sum(status .== :Optimal)
-
-sample_p = Float32.(soln_p[status .== :Optimal, :])
-sample_ω = Float32.(ωsamples[:,status .== :Optimal])'
-
-@test length(collect(keys(bases))) == 1
-@test length(collect(keys(cbases))) == 1
-@test length(collect(keys(rbases))) == 1
-OPFRecourse.get_opf_solution(m, ωsamples[:,1])
-cbasis, rbasis = MathProgBase.getbasis(m.model.internalModel)
-br = OPFRecourse.BasisRecourse(ref, m, cbasis, rbasis);
-for i in 1:noptimal
+@test unique(scenarios.whichbasis,1) == [1 1]
+@test length(scenarios.cbases) == 1
+@test length(scenarios.rbases) == 1
+br = OPFRecourse.BasisRecourse(ref, m, scenarios.cbases[1], scenarios.rbases[1]);
+for i in 1:size(scenarios.scenarios,1)
     @test isapprox(
-        OPFRecourse.get_opf_solution(br, sample_ω[i,:]),
-        sample_p[i,:]
+        OPFRecourse.get_opf_solution(br, scenarios.scenarios[i,:]),
+        scenarios.solutions[i,:]
     )
 end
 @test isapprox(-JuMP.getvalue(fullccopf.α[1:2,:]), br.linearterms, atol=1e-6)
