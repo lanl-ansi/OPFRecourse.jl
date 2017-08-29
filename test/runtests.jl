@@ -5,9 +5,9 @@ data_file = string(Pkg.dir(),"/AlternatingOPF/test/data/nesta_case30_ieee_prob.m
 for (i,u) in ref[:uncertainty]; u["std"] /= 100.0 end # scale down volatility
 ref[:branch][2]["rate_a"] = 0.83 # line tightening
 ref = OPFRecourse.NetworkReference(ref, bus_prob = 0.95, line_prob = 0.95)
-@time ccopf = OPFRecourse.ChanceConstrainedOPF(ref, Gurobi.GurobiSolver());
+@time ccopf = OPFRecourse.ChanceConstrainedOPF(ref, Gurobi.GurobiSolver(OutputFlag=0));
 @time JuMP.solve(ccopf.model, method=:Reformulate)
-@time fullccopf = OPFRecourse.FullChanceConstrainedOPF(ref, Gurobi.GurobiSolver());
+@time fullccopf = OPFRecourse.FullChanceConstrainedOPF(ref, Gurobi.GurobiSolver(OutputFlag=0));
 @time JuMP.solve(fullccopf.model, method=:Reformulate)
 @time m = OPFRecourse.SingleScenarioOPF(ref, Gurobi.GurobiSolver(OutputFlag=0));
 @time JuMP.solve(m.model)
