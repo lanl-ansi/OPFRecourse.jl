@@ -64,6 +64,10 @@ function ChanceConstrainedOPF(
     JuMP.@constraints model begin
         sum(α[i] for i in 1:ref.ngen) == 1
         sum(α[g] for g in ref.busgens[ref.r]) == 0
+        powerbalance, 0 == sum(
+            sum(p[g] for g in ref.busgens[i]) - ref.bus[i]["pd"] - ref.bus[i]["gs"]
+            for i in 1:ref.nbus
+        )
     end
     for i in 1:ref.ngen
         JuMP.@constraint(model, p[i] - sum(ω)*α[i] <= pmax(ref,i), with_probability=ref.bus_prob)
@@ -106,6 +110,10 @@ function FullChanceConstrainedOPF(
     f = fulllineflow(ref, p, α, ω)
     JuMP.@constraints model begin
         [j in 1:ref.nuncertain], sum(α[i,j] for i in 1:ref.ngen) == 1
+        powerbalance, 0 == sum(
+            sum(p[g] for g in ref.busgens[i]) - ref.bus[i]["pd"] - ref.bus[i]["gs"]
+            for i in 1:ref.nbus
+        )
     end
     for i in 1:ref.ngen
         JuMP.@constraint(model, p[i] - sum(α[i,j]*ω[j] for j in 1:ref.nuncertain) <= pmax(ref,i), with_probability=ref.bus_prob)
