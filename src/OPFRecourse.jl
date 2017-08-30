@@ -6,4 +6,5 @@ module OPFRecourse
     include("basis.jl")
     include("scenarios.jl")
     include("evaluate.jl")
+    include("ensemble.jl")
 end
