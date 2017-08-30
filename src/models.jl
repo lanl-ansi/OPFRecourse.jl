@@ -83,6 +83,10 @@ ChanceConstrainedOPF(filename::String; kwargs...) =
 ChanceConstrainedOPF(ref::Dict{Symbol,Any}; kwargs...) =
     ChanceConstrainedOPF(NetworkReference(ref); kwargs...)
 
+function get_opf_solution(opf::ChanceConstrainedOPF, ω)
+    return JuMP.getvalue(opf.p) - JuMP.getvalue(opf.α)*sum(ω)
+end
+
 mutable struct FullChanceConstrainedOPF
     model::JuMP.Model
     p
@@ -113,6 +117,10 @@ function FullChanceConstrainedOPF(
     end
     JuMP.@objective(model, Min, sum(cost(ref,i,1)*p[i] + cost(ref,i,2)*p[i] + cost(ref,i,3) for i in 1:ref.ngen))
     FullChanceConstrainedOPF(model,p,α)
+end
+
+function get_opf_solution(opf::FullChanceConstrainedOPF, ω)
+    return JuMP.getvalue(opf.p) - JuMP.getvalue(opf.α)*ω
 end
 
 mutable struct SingleScenarioOPF

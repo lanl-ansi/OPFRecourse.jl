@@ -7,19 +7,26 @@ data_file = string(Pkg.dir(),"/AlternatingOPF/test/data/nesta_case30_ieee_prob.m
     for (i,u) in ref[:uncertainty]; u["std"] /= 100.0 end
     ref[:branch][2]["rate_a"] = 0.83 # line tightening
     ref = OPFRecourse.NetworkReference(ref, bus_prob = 0.95, line_prob = 0.95)
+    
     @time ccopf = OPFRecourse.ChanceConstrainedOPF(ref, Gurobi.GurobiSolver(OutputFlag=0));
     @time JuMP.solve(ccopf.model, method=:Reformulate)
+
     @time fullccopf = OPFRecourse.FullChanceConstrainedOPF(ref, Gurobi.GurobiSolver(OutputFlag=0));
     @time JuMP.solve(fullccopf.model, method=:Reformulate)
+
     @time m = OPFRecourse.SingleScenarioOPF(ref, Gurobi.GurobiSolver(OutputFlag=0));
     @time JuMP.solve(m.model)
 
     @time scenarios = OPFRecourse.OPFScenarios(ref, m, nsamples = 1000);
-    br = OPFRecourse.BasisRecourse(ref, m, scenarios.cbases[1], scenarios.rbases[1]);
+    @test length(OPFRecourse.get_opf_solution(ccopf, scenarios.scenarios[1,:])) == ref.ngen
+    @test length(OPFRecourse.get_opf_solution(fullccopf, scenarios.scenarios[1,:])) == ref.ngen
+    @test length(OPFRecourse.get_opf_solution(m, scenarios.scenarios[1,:])) == ref.ngen
 
+    br = OPFRecourse.BasisRecourse(ref, m, scenarios.cbases[1], scenarios.rbases[1]);
     @test unique(scenarios.whichbasis,1) == [1 1]
     @test length(scenarios.cbases) == 1
     @test length(scenarios.rbases) == 1
+    
     for i in 1:size(scenarios.scenarios,1)
         @test isapprox(
             OPFRecourse.reproject(
