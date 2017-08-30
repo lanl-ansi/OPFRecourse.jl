@@ -17,16 +17,20 @@ function reproject(ref::NetworkReference, p)
     newp
 end
 
-function ntransmissionviolations(ref, p, ω::Vector; atol::Float64 = 1e-4)
+function ntransmissionviolations(ref, p, ω::Vector; atol::Float64 = 1e-5)
     f = lineflow(ref, p, ω)
     sum(abs(f[l]) > rate(ref,l) + atol for l in 1:ref.nline)
 end
 
-function ntransmissionviolations(ref, p, ω::Matrix; atol::Float64 = 1e-4)
+function ntransmissionviolations(ref, p, ω::Matrix; atol::Float64 = 1e-5)
     sum(ntransmissionviolations(ref, p, ω[i,:], atol=atol) for i in 1:size(ω,1))
 end
 
-function ngenerationviolations(ref, p; atol::Float64 = 1e-4)
+function ngenerationviolations(ref, p; atol::Float64 = 1e-5)
     sum(pmin(ref,i) - atol > p[i] for i in 1:ref.ngen) +
     sum(pmax(ref,i) + atol < p[i] for i in 1:ref.ngen)
+end
+
+function nviolations(ref, p, ω; atol::Float64 = 1e-5)
+    ngenerationviolations(ref, p) + ntransmissionviolations(ref, p, ω)
 end
