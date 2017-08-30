@@ -23,7 +23,7 @@ function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int
     noptimal = 0
 
     for i in 1:nsamples
-        for j in eachindex(ω); JuMP.fix(m.ω[j], ωsamples[j,i]) end
+        for j in eachindex(m.ω); JuMP.fix(m.ω[j], ωsamples[j,i]) end
         status[i] = JuMP.solve(m.model)
 
         if status[i] == :Optimal

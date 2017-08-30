@@ -1,9 +1,10 @@
 using OPFRecourse, Gurobi, Distributions, Base.Test
 
+data_file = string(Pkg.dir(),"/AlternatingOPF/test/data/nesta_case30_ieee_prob.m")
+
 @testset "Lower Volatility (Only 1 Optimal Basis)" begin
-    data_file = string(Pkg.dir(),"/AlternatingOPF/test/data/nesta_case30_ieee_prob.m")
     @time ref = PowerModels.build_ref(PowerModels.parse_file(data_file));
-    for (i,u) in ref[:uncertainty]; u["std"] /= 100.0 end # scale down volatility
+    for (i,u) in ref[:uncertainty]; u["std"] /= 100.0 end
     ref[:branch][2]["rate_a"] = 0.83 # line tightening
     ref = OPFRecourse.NetworkReference(ref, bus_prob = 0.95, line_prob = 0.95)
     @time ccopf = OPFRecourse.ChanceConstrainedOPF(ref, Gurobi.GurobiSolver(OutputFlag=0));
@@ -14,6 +15,7 @@ using OPFRecourse, Gurobi, Distributions, Base.Test
     @time JuMP.solve(m.model)
 
     @time scenarios = OPFRecourse.OPFScenarios(ref, m, nsamples = 1000);
+    br = OPFRecourse.BasisRecourse(ref, m, scenarios.cbases[1], scenarios.rbases[1]);
 
     @test unique(scenarios.whichbasis,1) == [1 1]
     @test length(scenarios.cbases) == 1
@@ -33,7 +35,7 @@ end
 
 @testset "Higher Volatility (With 2 Optimal Basis)" begin
     @time ref = PowerModels.build_ref(PowerModels.parse_file(data_file));
-    for (i,u) in ref[:uncertainty]; u["std"] /= 50.0 end # scale up volatility
+    for (i,u) in ref[:uncertainty]; u["std"] /= 50.0 end
     ref[:branch][2]["rate_a"] = 0.83 # line tightening
     ref = OPFRecourse.NetworkReference(ref, bus_prob = 0.95, line_prob = 0.95)
     @time m = OPFRecourse.SingleScenarioOPF(ref, Gurobi.GurobiSolver(OutputFlag=0));
