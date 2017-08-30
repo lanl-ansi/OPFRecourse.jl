@@ -149,5 +149,6 @@ SingleScenarioOPF(ref::Dict{Symbol,Any}; kwargs...) =
 
 function get_opf_solution(opf::SingleScenarioOPF, ω)
     for i in eachindex(ω); JuMP.fix(opf.ω[i], ω[i]) end
-    JuMP.solve(opf.model)
+    @assert JuMP.solve(opf.model) == :Optimal
+    JuMP.getvalue(opf.p)
 end
