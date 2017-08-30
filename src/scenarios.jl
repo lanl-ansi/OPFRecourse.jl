@@ -1,4 +1,5 @@
 mutable struct OPFScenarios
+    ref::NetworkReference
     opf::SingleScenarioOPF
     ω::Distributions.Distribution
     scenarios::Matrix{Float64} # nscenarios x nuncertain
@@ -22,7 +23,8 @@ function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int
     noptimal = 0
 
     for i in 1:nsamples
-        status[i] = get_opf_solution(m, ωsamples[:,i])
+        for j in eachindex(ω); JuMP.fix(m.ω[j], ωsamples[j,i]) end
+        status[i] = JuMP.solve(m.model)
 
         if status[i] == :Optimal
             # if the scenario was feasible, keep track of basis
@@ -52,5 +54,5 @@ function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int
     for k in keys(cbases); whichbasis[cbases[k],1] = whichcol[collect(k)] end
     for k in keys(rbases); whichbasis[rbases[k],2] = whichrow[collect(k)] end
 
-    OPFScenarios(m, ω, sample_ω, sample_p, colbases, rowbases, whichbasis)
+    OPFScenarios(ref, m, ω, sample_ω, sample_p, colbases, rowbases, whichbasis)
 end
