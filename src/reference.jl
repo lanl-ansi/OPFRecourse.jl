@@ -59,6 +59,10 @@ fstart(ref::NetworkReference, l) = PM.getstart(ref.ref[:branch],l,"p_start")
 
 cost(ref::NetworkReference, i, c) = ref.ref[:gen][i]["cost"][c]
 
+cost(ref::NetworkReference, p::Vector) = sum(
+    cost(ref,i,1)*p[i] + cost(ref,i,2)*p[i] + cost(ref,i,3) for i in 1:ref.ngen
+)
+
 πmatrix(ref::NetworkReference, m) = [ref.π[m, ref.refω[j]["bus"]] for j in 1:ref.nuncertain]
 
 function admittancematrix(ref::Dict{Symbol,Any})
