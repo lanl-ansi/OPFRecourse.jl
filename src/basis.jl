@@ -29,7 +29,7 @@ function BasisRecourse(ref::NetworkReference, m::SingleScenarioOPF, cbasis, rbas
     @assert issorted(basic_indices)
     @assert length(m.model.linconstr) == 2*ref.nline + 1
     basis = zeros(Float64, numbasic, numbasic)
-    ωmatrix = zeros(Float64, numbasic, ref.nuncertain)
+    ωmatrix = zeros(Float64, numbasic, ref.nbus)
     c = 0
     for i in 1:(2*ref.nline + 1)
         terms = m.model.linconstr[i].terms
@@ -53,7 +53,7 @@ function BasisRecourse(ref::NetworkReference, m::SingleScenarioOPF, cbasis, rbas
                         rhs -= coeff*br.fixed[v.col]
                     end
                 else
-                    @assert v.col <= ref.ngen + ref.nuncertain # uncertainty
+                    @assert v.col <= ref.ngen + ref.nbus # uncertainty
                     @assert cbasis[v.col] !== :Basic # they are fixed for each scenario
                     ωmatrix[c,v.col-ref.ngen] -= coeff
                 end

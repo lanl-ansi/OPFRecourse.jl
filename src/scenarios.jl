@@ -10,7 +10,7 @@ mutable struct OPFScenarios
 end
 
 function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int=1000)
-    ω = Distributions.MvNormal([ref.refω[i]["mean"] for i in 1:ref.nuncertain], Array(ref.sqrtΣ^2))
+    ω = Distributions.MvNormal(zeros(ref.nbus), diagm(ref.stdω)^2)
     ωsamples = rand(ω, nsamples)
     status = Array{Symbol}(nsamples);
     soln_p = zeros(nsamples, ref.ngen);

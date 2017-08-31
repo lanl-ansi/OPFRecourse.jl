@@ -1,43 +1,36 @@
-const PM = PowerModels
-
 mutable struct NetworkReference
     ref::Dict{Symbol,Any}
     nbus::Int
     ngen::Int
     nline::Int
-    nuncertain::Int
     r::Int # reference bus
-    refω::Dict{Int,Dict{String,Any}}
+    stdω::Vector{Float64}
     bus::Dict{Int,Dict{String,Any}}
     busgens::Dict{Int,Vector{Any}}
-    busarcs::Dict{Int,Vector{Any}}
-    arcsfrom::Vector{Tuple{Int,Int,Int}}
-    nonref_indices::Vector{Int}
-    sqrtΣ::AbstractMatrix{Float64}
     B::Matrix{Float64}
     π::Matrix{Float64}
-    varΩ::Float64
     line_prob::Float64
     bus_prob::Float64
 end
 
 function NetworkReference(ref::Dict{Symbol,Any};
-        line_prob::Float64 = 0.9, bus_prob::Float64 = 0.9
+        line_prob::Float64 = 0.9, bus_prob::Float64 = 0.9,
+        σscaling::Float64 = 0.05
     )
     @assert validate_ref(ref)
-    nbus, r, refω = length(ref[:bus]), ref[:ref_buses][1]["bus_i"], ref[:uncertainty]
+    nbus, r = length(ref[:bus]), ref[:ref_buses][1]["bus_i"]
     nonref_indices = [b for b in 1:nbus if b != r]
-    B = admittancematrix(ref); nuncertain = length(refω)
-    sqrtΣ = [ref[:corr][i]["col_$j"]*refω[i]["std"]*refω[j]["std"]
-            for i in 1:nuncertain, j in 1:nuncertain] ^ 0.5
-    varΩ = sum(ref[:corr][i]["col_$j"]*refω[i]["std"]*refω[j]["std"]
-               for i in 1:nuncertain, j in 1:nuncertain)
+    B = admittancematrix(ref)
+    stdω = [σscaling*(0.01 + ref[:bus][i]["pd"]) for i in 1:nbus]
     π = zeros(nbus,nbus)
     π[nonref_indices, nonref_indices] = inv(B[nonref_indices, nonref_indices])
-    NetworkReference(ref, nbus, length(ref[:gen]), length(ref[:branch]), nuncertain,
-        r, refω, ref[:bus], ref[:bus_gens], ref[:bus_arcs], ref[:arcs_from],
-        nonref_indices, sqrtΣ, B, π, varΩ, line_prob, bus_prob)
+    NetworkReference(ref, nbus, length(ref[:gen]), length(ref[:branch]),
+        r, stdω, ref[:bus], ref[:bus_gens], B, π, line_prob, bus_prob)
 end
+
+NetworkReference(filename::String; kwargs...) = NetworkReference(
+    PowerModels.build_ref(PowerModels.parse_file(filename)); kwargs...
+)
 
 rate(ref::NetworkReference, l) = ref.ref[:branch][l]["rate_a"]
 
@@ -51,19 +44,13 @@ pmin(ref::NetworkReference, i) = ref.ref[:gen][i]["pmin"]
 
 pmax(ref::NetworkReference, i) = ref.ref[:gen][i]["pmax"]
 
-pstart(ref::NetworkReference, i) = PM.getstart(ref.ref[:gen],i,"pg_start")
-
-θstart(ref::NetworkReference, i) = PM.getstart(ref.ref[:bus],i,"t_start")
-
-fstart(ref::NetworkReference, l) = PM.getstart(ref.ref[:branch],l,"p_start")
+pstart(ref::NetworkReference, i) = PowerModels.getstart(ref.ref[:gen],i,"pg_start")
 
 cost(ref::NetworkReference, i, c) = ref.ref[:gen][i]["cost"][c]
 
 cost(ref::NetworkReference, p::Vector) = sum(
     cost(ref,i,1)*p[i] + cost(ref,i,2)*p[i] + cost(ref,i,3) for i in 1:ref.ngen
 )
-
-πmatrix(ref::NetworkReference, m) = [ref.π[m, ref.refω[j]["bus"]] for j in 1:ref.nuncertain]
 
 function admittancematrix(ref::Dict{Symbol,Any})
     nbus = length(ref[:bus])
@@ -80,10 +67,7 @@ function admittancematrix(ref::Dict{Symbol,Any})
 end
 
 function validate_ref(ref::Dict{Symbol,Any})
-    nbus, ngen = length(ref[:bus]), length(ref[:gen])
-    # nline, nuncertain = length(ref[:branch]), length(ref[:uncertainty])
-    nline = length(ref[:branch])
-    # sort(collect(keys(ref[:uncertainty]))) == collect(1:nuncertain) || return false
+    nbus, ngen, nline = length(ref[:bus]), length(ref[:gen]), length(ref[:branch])
     sort(collect(keys(ref[:branch]))) == collect(1:nline) || return false
     sort(collect(keys(ref[:gen]))) == collect(1:ngen) || return false
     sort(collect(keys(ref[:bus]))) == collect(1:nbus) || return false
