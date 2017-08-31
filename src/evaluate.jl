@@ -11,7 +11,7 @@ function reproject(ref::NetworkReference, p)
     totalpower = sum(p[i] for i in 1:(ref.ngen-1))
     newp = zeros(Float64, ref.ngen)
     for i in 1:(ref.ngen-1)
-        newp[i] = max(pmin(ref,i), min(pmax(ref,i), p[i]))
+        newp[i] = max(ref.gen[i].pmin, min(ref.gen[i].pmax, p[i]))
     end
     newp[ref.ngen] = p[ref.ngen] + totalpower - sum(newp)
     newp
@@ -19,7 +19,7 @@ end
 
 function ntransmissionviolations(ref, p, ω::Vector; atol::Float64 = 1e-5)
     f = lineflow(ref, p, ω)
-    sum(abs(f[l]) > rate(ref,l) + atol for l in 1:ref.nline)
+    sum(abs(f[l]) > ref.line[l].rate + atol for l in 1:ref.nline)
 end
 
 function ntransmissionviolations(ref, p, ω::Matrix; atol::Float64 = 1e-5)
@@ -27,8 +27,8 @@ function ntransmissionviolations(ref, p, ω::Matrix; atol::Float64 = 1e-5)
 end
 
 function ngenerationviolations(ref, p; atol::Float64 = 1e-5)
-    sum(pmin(ref,i) - atol > p[i] for i in 1:ref.ngen) +
-    sum(pmax(ref,i) + atol < p[i] for i in 1:ref.ngen)
+    sum(ref.gen[i].pmin - atol > p[i] for i in 1:ref.ngen) +
+    sum(ref.gen[i].pmax + atol < p[i] for i in 1:ref.ngen)
 end
 
 function nviolations(ref, p, ω; atol::Float64 = 1e-5)
