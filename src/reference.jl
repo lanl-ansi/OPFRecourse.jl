@@ -24,7 +24,7 @@ end
 function NetworkReference(ref::Dict{Symbol,Any};
         line_prob::Float64 = 0.9, bus_prob::Float64 = 0.9
     )
-    validate_ref(ref)
+    @assert validate_ref(ref)
     nbus, r, refω = length(ref[:bus]), ref[:ref_buses][1]["bus_i"], ref[:uncertainty]
     nonref_indices = [b for b in 1:nbus if b != r]
     B = admittancematrix(ref); nuncertain = length(refω)
@@ -81,13 +81,19 @@ end
 
 function validate_ref(ref::Dict{Symbol,Any})
     nbus, ngen = length(ref[:bus]), length(ref[:gen])
-    nline, nuncertain = length(ref[:branch]), length(ref[:uncertainty])
-    @assert sort(collect(keys(ref[:uncertainty]))) == collect(1:nuncertain)
-    @assert sort(collect(keys(ref[:branch]))) == collect(1:nline)
-    @assert sort(collect(keys(ref[:gen]))) == collect(1:ngen)
-    @assert sort(collect(keys(ref[:bus]))) == collect(1:nbus)
-    @assert sort([l for (l,i,j) in ref[:arcs_from]]) == collect(1:nline)
-    @assert length(ref[:ref_buses]) == 1
-    for i in keys(ref[:branch]); @assert i == ref[:branch][i]["index"] end
-    for i in keys(ref[:bus]); @assert i == ref[:bus][i]["index"] end
+    # nline, nuncertain = length(ref[:branch]), length(ref[:uncertainty])
+    nline = length(ref[:branch])
+    # sort(collect(keys(ref[:uncertainty]))) == collect(1:nuncertain) || return false
+    sort(collect(keys(ref[:branch]))) == collect(1:nline) || return false
+    sort(collect(keys(ref[:gen]))) == collect(1:ngen) || return false
+    sort(collect(keys(ref[:bus]))) == collect(1:nbus) || return false
+    sort([l for (l,i,j) in ref[:arcs_from]]) == collect(1:nline) || return false
+    length(ref[:ref_buses]) == 1 || return false
+    for i in keys(ref[:branch])
+        i == ref[:branch][i]["index"] || return false
+    end
+    for i in keys(ref[:bus])
+        i == ref[:bus][i]["index"] || return false
+    end
+    return true
 end
