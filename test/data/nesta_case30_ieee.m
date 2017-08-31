@@ -254,24 +254,3 @@ mpc.branch = [
 % INFO    : Gen at bus 13	: Vg=1.071 -> Vg=1.06
 % INFO    : 
 % INFO    : === Writing Matpower Case File Notes ===
-
-%column_names% bus    mean    std
-mpc.uncertainty = [
-                   1         0   1.8
-                   2         0   0.9
-                   5         0   1.8
-                   8         0   0.7
-                   11         0   0.7
-                   ];
-
-% correlation matrix
-%mpc.corr = eye(length(mpc.bus(mpc.bus(:,1)>0,1)));
-
-mpc.corr = [
-            1     0     0     0     0
-            0     1     0     0     0
-            0     0     1     0     0
-            0     0     0     1     0
-            0     0     0     0     1
-            ];
-
