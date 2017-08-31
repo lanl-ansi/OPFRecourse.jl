@@ -1,6 +1,6 @@
 using OPFRecourse, Gurobi, Distributions, Base.Test
 
-data_file = string(Pkg.dir(),"/AlternatingOPF/test/data/nesta_case30_ieee_prob.m")
+data_file = string(Pkg.dir(),"/OPFRecourse/test/data/nesta_case30_ieee_prob.m")
 
 @testset "Lower Volatility (Only 1 Optimal Basis)" begin
     @time ref = PowerModels.build_ref(PowerModels.parse_file(data_file));
