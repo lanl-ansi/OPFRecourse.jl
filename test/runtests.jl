@@ -1,6 +1,6 @@
 using OPFRecourse, Gurobi, Distributions, Base.Test
 
-data_file = string(Pkg.dir(),"/OPFRecourse/test/data/nesta_case30_ieee_prob.m")
+data_file = string(Pkg.dir(),"/OPFRecourse/test/data/nesta_case30_ieee.m")
 
 @testset "Lower Volatility (Only 1 Optimal Basis)" begin
     @time ref = OPFRecourse.NetworkReference(data_file, bus_prob = 0.95, line_prob = 0.95, σscaling = 0.05);
