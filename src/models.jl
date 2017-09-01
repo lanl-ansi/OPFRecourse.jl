@@ -1,48 +1,3 @@
-function singlelineflow(ref, p, ω, l)
-    function busvalue(i)
-        result = ω[i] - ref.bus[i].pd - ref.bus[i].gs
-        if !isempty(ref.bus[i].gens)
-            result += sum(p[g] for g in ref.bus[i].gens)
-        end
-        result
-    end
-    θ(i) = sum(ref.π[i,j]*busvalue(j) for j in 1:ref.nbus)
-    ref.line[l].β*(θ(ref.line[l].frombus) - θ(ref.line[l].tobus))
-end
-
-function singlelineflow(ref, p, α, ω, l)
-    function busvalue(i)
-        result = ω[i] - ref.bus[i].pd - ref.bus[i].gs
-        if !isempty(ref.bus[i].gens)
-            result += sum(p[g] - α[g]*sum(ω) for g in ref.bus[i].gens)
-        end
-        result
-    end
-    θ(i) = sum(ref.π[i,j]*busvalue(j) for j in 1:ref.nbus)
-    ref.line[l].β*(θ(ref.line[l].frombus) - θ(ref.line[l].tobus))
-end
-
-function singlelineflow2(ref, p, α, ω, l)
-    function busvalue(i)
-        result = ω[i] - ref.bus[i].pd - ref.bus[i].gs
-        if !isempty(ref.bus[i].gens)
-            result += sum(
-                p[g] - sum(α[g,j]*ω[j] for j in 1:ref.nbus)
-                for g in ref.bus[i].gens
-            )
-        end
-        result
-    end
-    θ(i) = sum(ref.π[i,j]*busvalue(j) for j in 1:ref.nbus)
-    ref.line[l].β*(θ(ref.line[l].frombus) - θ(ref.line[l].tobus))
-end
-
-"computes B_f*inv(B̃)(p + μ + ω - d)"
-lineflow(ref, p, ω) = [singlelineflow(ref, p, ω, l) for l in 1:ref.nline]
-"computes B_f*inv(B̃)(p - α⋅ω + μ + ω - d) with aggregated affine recourse"
-lineflow(ref, p, α, ω) = [singlelineflow(ref, p, α, ω, l) for l in 1:ref.nline]
-"computes B_f*inv(B̃)(p - α⋅ω + μ + ω - d) with full affine recourse"
-fulllineflow(ref, p, α, ω) = [singlelineflow2(ref, p, α, ω, l) for l in 1:ref.nline]
 
 mutable struct ChanceConstrainedOPF
     model::JuMP.Model
@@ -158,8 +113,9 @@ function SingleScenarioOPF(
     JuMP.@expression(model, busvalue[i in 1:ref.nbus],
         sum(p[g] for g in ref.bus[i].gens) + ω[i] - ref.bus[i].pd - ref.bus[i].gs 
     )
-    θ(i) = sum(ref.π[i,j]*busvalue[j] for j in 1:ref.nbus)
-    lineflow(l) = ref.line[l].β*(θ(ref.line[l].frombus) - θ(ref.line[l].tobus))
+    lineflow(l) = ref.line[l].β*(
+        θ(ref,busvalue,ref.line[l].frombus) - θ(ref,busvalue,ref.line[l].tobus)
+    )
     JuMP.@constraints model begin
         [l in 1:ref.nline], lineflow(l) <= ref.line[l].rate
         [l in 1:ref.nline], lineflow(l) >= -ref.line[l].rate
