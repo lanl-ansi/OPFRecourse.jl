@@ -126,6 +126,9 @@ Computes the `i`-th entry of the phase angle `inv(B̃)*busvalue`
 where `busvalue[i]` should correspond to the `i`-th entry of `p + μ + ω - d`
 """
 θ(ref, busvalue::Vector, i) = sum(ref.π[i,j]*busvalue[j] for j in 1:ref.nbus)
+θ(ref, busvalue::Vector{JuMP.GenericAffExpr{Float64,JuMP.Variable}}, i) =
+    foldl(append!, ref.π[i,j]*busvalue[j] for j in 1:ref.nbus)
+
 
 "computes B_f*inv(B̃)(p + μ + ω - d) corresponding to line `l`"
 function lineflow(ref, p, ω, l)
