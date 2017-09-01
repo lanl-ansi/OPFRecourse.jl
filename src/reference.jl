@@ -51,12 +51,6 @@ function NetworkReference(ref::Dict{Symbol,Any};
         reverseindices = Dict(zip(originalindices,1:nindices))
         nindices, originalindices, reverseindices
     end
-    nbus, busindices, bus_index = generateindices(ref[:bus])
-    bus = [Bus(
-        ref[:bus][busindices[i]]["pd"],
-        ref[:bus][busindices[i]]["gs"],
-        Int.(ref[:bus_gens][busindices[i]])
-    ) for i in 1:nbus]
     ngen, genindices, gen_index = generateindices(ref[:gen])
     gen = [Gen(
         ref[:gen][genindices[i]]["gen_bus"],
@@ -65,17 +59,23 @@ function NetworkReference(ref::Dict{Symbol,Any};
         PowerModels.getstart(ref[:gen],genindices[i],"pg_start"),
         ref[:gen][genindices[i]]["cost"]
     ) for i in 1:ngen]
+    nbus, busindices, bus_index = generateindices(ref[:bus])
+    bus = [Bus(
+        ref[:bus][busindices[i]]["pd"],
+        ref[:bus][busindices[i]]["gs"],
+        [gen_index[g] for g in ref[:bus_gens][busindices[i]]]
+    ) for i in 1:nbus]
     nline, lineindices, line_index = generateindices(ref[:branch])
     line = [Line(
         ref[:branch][lineindices[l]]["rate_a"],
-        ref[:branch][lineindices[l]]["f_bus"],
-        ref[:branch][lineindices[l]]["t_bus"],
+        bus_index[ref[:branch][lineindices[l]]["f_bus"]],
+        bus_index[ref[:branch][lineindices[l]]["t_bus"]],
         1 / ref[:branch][lineindices[l]]["br_x"]
     ) for l in 1:nline]
     originalindices = Dict(:bus => busindices, :gen => genindices, :line => lineindices)
 
     length(ref[:ref_buses]) > 1 && warn("Using only the first reference bus")
-    r = bus_index[ref[:ref_buses][1]["bus_i"]]
+    r = bus_index[ref[:ref_buses][first(keys(ref[:ref_buses]))]["bus_i"]]
 
     nonref_indices = [b for b in 1:nbus if b != r]
     B = admittancematrix(ref, bus_index)

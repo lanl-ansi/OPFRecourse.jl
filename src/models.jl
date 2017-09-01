@@ -2,7 +2,9 @@
 function busfromRHS(ref, p, ω)
     function busvalue(i)
         result = ω[i] - ref.bus[i].pd - ref.bus[i].gs
-        for g in ref.bus[i].gens; result += p[g] end
+        if !isempty(ref.bus[i].gens)
+            result += sum(p[g] for g in ref.bus[i].gens)
+        end
         result
     end
     Any[busvalue(i) for i in 1:ref.nbus]
@@ -12,7 +14,9 @@ end
 function busfromRHS(ref, p, α, ω)
     function busvalue(i)
         result = ω[i] - ref.bus[i].pd - ref.bus[i].gs
-        for g in ref.bus[i].gens; result += p[g] - α[g]*sum(ω) end
+        if !isempty(ref.bus[i].gens)
+            result += sum(p[g] - α[g]*sum(ω) for g in ref.bus[i].gens)
+        end
         result
     end
     Any[busvalue(i) for i in 1:ref.nbus]
@@ -22,8 +26,11 @@ end
 function fullbusfromRHS(ref, p, α, ω)
     function busvalue(i)
         result = ω[i] - ref.bus[i].pd - ref.bus[i].gs
-        for g in ref.bus[i].gens
-            result += p[g] - sum(α[g,j]*ω[j] for j in 1:ref.nbus)
+        if !isempty(ref.bus[i].gens)
+            result += sum(
+                p[g] - sum(α[g,j]*ω[j] for j in 1:ref.nbus)
+                for g in ref.bus[i].gens
+            )
         end
         result
     end
