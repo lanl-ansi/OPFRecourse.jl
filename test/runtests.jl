@@ -108,8 +108,8 @@ end
         @testset "$f" begin
             @time ref = OPFRecourse.NetworkReference(string(Pkg.dir(),"/OPFRecourse/test/data/pglib-opf/", f))
 
-            @time ccopf = OPFRecourse.ChanceConstrainedOPF(ref, Gurobi.GurobiSolver(OutputFlag=0, TimeLimit=30));
-            @time JuMP.solve(ccopf.model, method=:Cuts, silent=true)
+            # @time ccopf = OPFRecourse.ChanceConstrainedOPF(ref, Gurobi.GurobiSolver(OutputFlag=0, TimeLimit=30));
+            # @time JuMP.solve(ccopf.model, method=:Cuts, silent=true)
 
             # @time fullccopf = OPFRecourse.FullChanceConstrainedOPF(ref, Gurobi.GurobiSolver(OutputFlag=0, TimeLimit=30));
             # @time JuMP.solve(fullccopf.model, method=:Cuts, silent=true)
