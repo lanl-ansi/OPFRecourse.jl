@@ -107,15 +107,28 @@ end
     ]
         @testset "$f" begin
             @time ref = OPFRecourse.NetworkReference(string(Pkg.dir(),"/OPFRecourse/test/data/pglib-opf/", f))
-
-            # @time ccopf = OPFRecourse.ChanceConstrainedOPF(ref, Gurobi.GurobiSolver(OutputFlag=0, TimeLimit=30));
-            # @time JuMP.solve(ccopf.model, method=:Cuts, silent=true)
-
-            # @time fullccopf = OPFRecourse.FullChanceConstrainedOPF(ref, Gurobi.GurobiSolver(OutputFlag=0, TimeLimit=30));
-            # @time JuMP.solve(fullccopf.model, method=:Cuts, silent=true)
-
             @time m = OPFRecourse.SingleScenarioOPF(ref, Gurobi.GurobiSolver(OutputFlag=0));
             @time JuMP.solve(m.model)
+        end
+    end
+
+    for f in [
+        "pglib_opf_case3_lmbd.m",
+        "pglib_opf_case5_pjm.m",
+        "pglib_opf_case14_ieee.m",
+        "pglib_opf_case24_ieee_rts.m",
+        "pglib_opf_case30_as.m",
+        "pglib_opf_case30_fsr.m",
+        "pglib_opf_case30_ieee.m",
+        "pglib_opf_case39_epri.m",
+        "pglib_opf_case57_ieee.m",
+        "pglib_opf_case73_ieee_rts.m",
+        "pglib_opf_case89_pegase.m"
+    ]
+        @testset "$f" begin
+            @time ref = OPFRecourse.NetworkReference(string(Pkg.dir(),"/OPFRecourse/test/data/pglib-opf/", f))
+            @time ccopf = OPFRecourse.ChanceConstrainedOPF(ref, Gurobi.GurobiSolver(OutputFlag=0, TimeLimit=30));
+            @time JuMP.solve(ccopf.model, method=:Cuts, silent=true)
         end
     end
 end
