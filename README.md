@@ -100,3 +100,7 @@ ngenerationviolations(ref, p)
 ntransmissionviolations(ref, p, ω)
 nviolations(ref, p, ω)
 ```
+
+## Acknowledgments
+
+This code has been developed as part of the Advanced Network Science Initiative at Los Alamos National Laboratory. 
