@@ -92,11 +92,13 @@ NetworkReference(filename::String; kwargs...) = NetworkReference(
     PowerModels.build_ref(PowerModels.parse_file(filename)); kwargs...
 )
 
+"The total cost of power generation plan `p`."
 cost(ref::NetworkReference, p::Vector) = sum(
     ref.gen[i].cost[1]*p[i] + ref.gen[i].cost[2]*p[i] + ref.gen[i].cost[3]
     for i in 1:ref.ngen
 )
 
+"Computes the bus admittancematrix B, with indices given by `bus_index::Dict`"
 function admittancematrix(ref::Dict{Symbol,Any}, bus_index::Dict{Int,Int})
     nbus = length(ref[:bus])
     B = zeros(nbus,nbus)
@@ -109,4 +111,57 @@ function admittancematrix(ref::Dict{Symbol,Any}, bus_index::Dict{Int,Int})
         B[t_bus, t_bus] += (branch["br_x"]/(branch["br_x"]^2+branch["br_r"]^2))
     end
     B
+end
+
+"""
+Computes the `i`-th entry of the phase angle `inv(B̃)*busvalue`
+
+where `busvalue(i)` should correspond to the `i`-th entry of `p + μ + ω - d`
+"""
+θ(ref, busvalue::Function, i) = sum(ref.π[i,j]*busvalue(j) for j in 1:ref.nbus)
+
+"""
+Computes the `i`-th entry of the phase angle `inv(B̃)*busvalue`
+
+where `busvalue[i]` should correspond to the `i`-th entry of `p + μ + ω - d`
+"""
+θ(ref, busvalue::Vector, i) = sum(ref.π[i,j]*busvalue[j] for j in 1:ref.nbus)
+
+"computes B_f*inv(B̃)(p + μ + ω - d) corresponding to line `l`"
+function lineflow(ref, p, ω, l)
+    function busvalue(i)
+        result = ω[i] - ref.bus[i].pd - ref.bus[i].gs
+        if !isempty(ref.bus[i].gens)
+            result += sum(p[g] for g in ref.bus[i].gens)
+        end
+        result
+    end
+    ref.line[l].β*(θ(ref,busvalue,ref.line[l].frombus) - θ(ref,busvalue,ref.line[l].tobus))
+end
+
+"computes B_f*inv(B̃)(p - α⋅ω + μ + ω - d) with aggregated affine recourse corresponding to line `l`"
+function lineflow(ref, p, α, ω, l)
+    function busvalue(i)
+        result = ω[i] - ref.bus[i].pd - ref.bus[i].gs
+        if !isempty(ref.bus[i].gens)
+            result += sum(p[g] - α[g]*sum(ω) for g in ref.bus[i].gens)
+        end
+        result
+    end
+    ref.line[l].β*(θ(ref,busvalue,ref.line[l].frombus) - θ(ref,busvalue,ref.line[l].tobus))    
+end
+
+"computes B_f*inv(B̃)(p - α⋅ω + μ + ω - d) with full affine recourse corresponding to line `l`"
+function fulllineflow(ref, p, α, ω, l)
+    function busvalue(i)
+        result = ω[i] - ref.bus[i].pd - ref.bus[i].gs
+        if !isempty(ref.bus[i].gens)
+            result += sum(
+                p[g] - sum(α[g,j]*ω[j] for j in 1:ref.nbus)
+                for g in ref.bus[i].gens
+            )
+        end
+        result
+    end
+    ref.line[l].β*(θ(ref,busvalue,ref.line[l].frombus) - θ(ref,busvalue,ref.line[l].tobus))
 end
