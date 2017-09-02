@@ -13,15 +13,25 @@ function ChanceConstrainedOPF(
     JuMP.@variable(model, ref.gen[i].pmin <= p[i in 1:ref.ngen] <= ref.gen[i].pmax, start=ref.gen[i].pstart)
     JuMP.@variable(model,                    α[i in 1:ref.ngen] >= 0)
     JuMPChance.@indepnormal(model,           ω[j in 1:ref.nbus], mean=0, var=ref.stdω[j]^2)
-    function busvalue(i)
+    function _busvalue(i)
         result = ω[i] - ref.bus[i].pd - ref.bus[i].gs
         if !isempty(ref.bus[i].gens)
             result += sum(p[g] - α[g]*sum(ω) for g in ref.bus[i].gens)
         end
         result
     end
-    busvalue = [busvalue(i) for i in 1:ref.nbus]
-    θ(i) = sum(ref.π[i,j]*busvalue[j] for j in 1:ref.nbus)
+    busvalue = [_busvalue(i) for i in 1:ref.nbus]
+    function θ(i)
+        result = ref.π[i,1]*busvalue[1]
+        for j in 2:ref.nbus
+            try
+                append!(result, ref.π[i,j]*busvalue[j])
+            catch
+                result += ref.π[i,j]*busvalue[j]
+            end
+        end
+        result
+    end
     lineflow(l) = ref.line[l].β*(θ(ref.line[l].frombus) - θ(ref.line[l].tobus))
     JuMP.@constraints model begin
         sum(α[i] for i in 1:ref.ngen) == 1
@@ -64,7 +74,7 @@ function FullChanceConstrainedOPF(
     JuMP.@variable(model, ref.gen[i].pmin <= p[i in 1:ref.ngen] <= ref.gen[i].pmax, start=ref.gen[i].pstart)
     JuMP.@variable(model,                    α[i in 1:ref.ngen, j in 1:ref.nbus] >= 0)
     JuMPChance.@indepnormal(model,           ω[j in 1:ref.nbus], mean=0, var=ref.stdω[j]^2)
-    function busvalue(i)
+    function _busvalue(i)
         result = ω[i] - ref.bus[i].pd - ref.bus[i].gs
         if !isempty(ref.bus[i].gens)
             result += sum(
@@ -74,8 +84,18 @@ function FullChanceConstrainedOPF(
         end
         result
     end
-    busvalue = [busvalue(i) for i in 1:ref.nbus]
-    θ(i) = sum(ref.π[i,j]*busvalue[j] for j in 1:ref.nbus)
+    busvalue = [_busvalue(i) for i in 1:ref.nbus]
+    function θ(i)
+        result = ref.π[i,1]*busvalue[1]
+        for j in 2:ref.nbus
+            try
+                append!(result, ref.π[i,j]*busvalue[j])
+            catch
+                result += ref.π[i,j]*busvalue[j]
+            end
+        end
+        result
+    end
     lineflow(l) = ref.line[l].β*(θ(ref.line[l].frombus) - θ(ref.line[l].tobus))
     JuMP.@constraints model begin
         [j in 1:ref.nbus], sum(α[i,j] for i in 1:ref.ngen) == 1
