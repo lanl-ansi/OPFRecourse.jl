@@ -74,61 +74,65 @@ end
 end
 
 @testset "Construction of NetworkReference object" begin
-    for f in [
-        "pglib_opf_case3_lmbd.m",
-        "pglib_opf_case5_pjm.m",
-        "pglib_opf_case14_ieee.m",
-        "pglib_opf_case24_ieee_rts.m",
-        "pglib_opf_case30_as.m",
-        "pglib_opf_case30_fsr.m",
-        "pglib_opf_case30_ieee.m",
-        "pglib_opf_case39_epri.m",
-        "pglib_opf_case57_ieee.m",
-        "pglib_opf_case73_ieee_rts.m",
-        "pglib_opf_case89_pegase.m",
-        "pglib_opf_case118_ieee.m",
-        "pglib_opf_case162_ieee_dtc.m",
-        "pglib_opf_case200_pserc.m",
-        "pglib_opf_case240_pserc.m",
-        "pglib_opf_case300_ieee.m",
-        # "pglib_opf_case1354_pegase.m",
-        # "pglib_opf_case1888_rte.m",
-        # "pglib_opf_case1951_rte.m",
-        # "pglib_opf_case2383wp_k.m",
-        # "pglib_opf_case2736sp_k.m",
-        # "pglib_opf_case2737sop_k.m",
-        # "pglib_opf_case2746wop_k.m",
-        # "pglib_opf_case2746wp_k.m",
-        # "pglib_opf_case2848_rte.m",
-        # "pglib_opf_case2868_rte.m",
-        # "pglib_opf_case2869_pegase.m",
-        # "pglib_opf_case3012wp_k.m",
-        # "pglib_opf_case3120sp_k.m"
-    ]
-        @testset "$f" begin
-            @time ref = OPFRecourse.NetworkReference(string(Pkg.dir(),"/OPFRecourse/test/data/pglib-opf/", f))
-            @time m = OPFRecourse.SingleScenarioOPF(ref, Gurobi.GurobiSolver(OutputFlag=0));
-            @time JuMP.solve(m.model)
+    @testset "SingleScenarioOPF" begin
+        for f in [
+            "pglib_opf_case3_lmbd.m",
+            "pglib_opf_case5_pjm.m",
+            "pglib_opf_case14_ieee.m",
+            "pglib_opf_case24_ieee_rts.m",
+            "pglib_opf_case30_as.m",
+            "pglib_opf_case30_fsr.m",
+            "pglib_opf_case30_ieee.m",
+            "pglib_opf_case39_epri.m",
+            "pglib_opf_case57_ieee.m",
+            "pglib_opf_case73_ieee_rts.m",
+            "pglib_opf_case89_pegase.m",
+            "pglib_opf_case118_ieee.m",
+            "pglib_opf_case162_ieee_dtc.m",
+            "pglib_opf_case200_pserc.m",
+            "pglib_opf_case240_pserc.m",
+            "pglib_opf_case300_ieee.m",
+            # "pglib_opf_case1354_pegase.m",
+            # "pglib_opf_case1888_rte.m",
+            # "pglib_opf_case1951_rte.m",
+            # "pglib_opf_case2383wp_k.m",
+            # "pglib_opf_case2736sp_k.m",
+            # "pglib_opf_case2737sop_k.m",
+            # "pglib_opf_case2746wop_k.m",
+            # "pglib_opf_case2746wp_k.m",
+            # "pglib_opf_case2848_rte.m",
+            # "pglib_opf_case2868_rte.m",
+            # "pglib_opf_case2869_pegase.m",
+            # "pglib_opf_case3012wp_k.m",
+            # "pglib_opf_case3120sp_k.m"
+        ]
+            @testset "$f" begin
+                @time ref = OPFRecourse.NetworkReference(string(Pkg.dir(),"/OPFRecourse/test/data/pglib-opf/", f))
+                @time m = OPFRecourse.SingleScenarioOPF(ref, Gurobi.GurobiSolver(OutputFlag=0));
+                @time JuMP.solve(m.model)
+            end
         end
     end
-
-    for f in [
-        "pglib_opf_case3_lmbd.m",
-        "pglib_opf_case5_pjm.m",
-        "pglib_opf_case14_ieee.m",
-        "pglib_opf_case24_ieee_rts.m",
-        "pglib_opf_case30_as.m",
-        "pglib_opf_case30_fsr.m",
-        "pglib_opf_case30_ieee.m",
-        "pglib_opf_case39_epri.m",
-        "pglib_opf_case57_ieee.m",
-        "pglib_opf_case73_ieee_rts.m",
-        "pglib_opf_case89_pegase.m"
-    ]
-        @testset "$f" begin
-            @time ref = OPFRecourse.NetworkReference(string(Pkg.dir(),"/OPFRecourse/test/data/pglib-opf/", f))
-            @time ccopf = OPFRecourse.ChanceConstrainedOPF(ref, Gurobi.GurobiSolver(OutputFlag=0, TimeLimit=30));
-            @time JuMP.solve(ccopf.model, method=:Cuts, silent=true)
+    @testset "ChanceConstrainedOPF" begin
+        for f in [
+            "pglib_opf_case3_lmbd.m",
+            "pglib_opf_case5_pjm.m",
+            "pglib_opf_case14_ieee.m",
+            "pglib_opf_case24_ieee_rts.m",
+            "pglib_opf_case30_as.m",
+            "pglib_opf_case30_fsr.m",
+            "pglib_opf_case30_ieee.m",
+            "pglib_opf_case39_epri.m",
+            "pglib_opf_case57_ieee.m",
+            "pglib_opf_case73_ieee_rts.m",
+            "pglib_opf_case89_pegase.m",
+            "pglib_opf_case118_ieee.m"
+        ]
+            @testset "$f" begin
+                @time ref = OPFRecourse.NetworkReference(string(Pkg.dir(),"/OPFRecourse/test/data/pglib-opf/", f))
+                @time ccopf = OPFRecourse.ChanceConstrainedOPF(ref, Gurobi.GurobiSolver(OutputFlag=0, TimeLimit=30));
+                @time JuMP.solve(ccopf.model, method=:Cuts, silent=true)
+            end
         end
     end
 end
