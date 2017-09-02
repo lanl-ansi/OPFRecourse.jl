@@ -92,9 +92,9 @@ end
             "pglib_opf_case200_pserc.m",
             "pglib_opf_case240_pserc.m",
             "pglib_opf_case300_ieee.m",
-            # "pglib_opf_case1354_pegase.m",
-            # "pglib_opf_case1888_rte.m",
-            # "pglib_opf_case1951_rte.m",
+            "pglib_opf_case1354_pegase.m",
+            "pglib_opf_case1888_rte.m",
+            "pglib_opf_case1951_rte.m"
             # "pglib_opf_case2383wp_k.m",
             # "pglib_opf_case2736sp_k.m",
             # "pglib_opf_case2737sop_k.m",
