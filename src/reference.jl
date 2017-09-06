@@ -82,7 +82,7 @@ function NetworkReference(ref::Dict{Symbol,Any};
     π = zeros(nbus,nbus)
     π[nonref_indices, nonref_indices] = inv(B[nonref_indices, nonref_indices])
 
-    stdω = [σscaling*(0.01 + ref[:bus][busindices[i]]["pd"]) for i in 1:nbus]
+    stdω = [σscaling*ref[:bus][busindices[i]]["pd"] for i in 1:nbus]
 
     NetworkReference(ref, nbus, ngen, nline, r, bus, gen, line,
         originalindices, B, π, stdω, line_prob, bus_prob)
