@@ -34,7 +34,6 @@ data_file = string(Pkg.dir(),"/OPFRecourse/test/data/nesta_case30_ieee.m")
             atol = 1e-6
         )
     end
-    @test isapprox(-JuMP.getvalue(fullccopf.α[1:2,:]), br.linearterms, atol=1e-6)
 end
 
 @testset "Higher Volatility (With 2 Optimal Basis)" begin
