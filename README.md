@@ -20,7 +20,9 @@ You should first install the following packages by running `Pkg.add(...)` in a J
 - PowerModels
 - JuMPChance
 
-Finally, you can install the package by running `Pkg.clone("https://github.com/yeesian/OPFRecourse.jl.git")`, or manually downloading this github repository into your julia package directory (you can run `Pkg.dir()` in a Julia REPL to locate it).
+Secondly, you can install the package by running `Pkg.clone("https://github.com/yeesian/OPFRecourse.jl.git")`, or manually downloading this github repository into your julia package directory (you can run `Pkg.dir()` in a Julia REPL to locate it).
+
+Finally, you should clone a copy of the [PGLIB OPF](https://github.com/power-grid-lib/pglib-opf) repository into your `OPFRecourse/test/data` folder. The current tests are based on [release v17.08](https://github.com/power-grid-lib/pglib-opf/releases/tag/v17.08).
 
 To test if it is successfully installed, run `Pkg.test("OPFRecourse")` in a Julia REPL.
 
