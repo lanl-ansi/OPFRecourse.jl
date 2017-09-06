@@ -7,6 +7,7 @@ mutable struct OPFScenarios
     cbases::Vector{Vector{Symbol}} # nbasis x num_vars
     rbases::Vector{Vector{Symbol}} # nbasis x num_constrs
     whichbasis::Matrix{Int} # nscenarios x 2 (indicating index of cbasis and rbasis)
+    whichscenario::Dict{Tuple{Int,Int},Vector{Int}}
 end
 
 function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int=1000)
@@ -59,5 +60,12 @@ function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int
     for k in keys(cbases); whichbasis[cbases[k],1] = whichcol[collect(k)] end
     for k in keys(rbases); whichbasis[rbases[k],2] = whichrow[collect(k)] end
 
-    OPFScenarios(ref, m, ω, sample_ω, sample_p, colbases, rowbases, whichbasis)
+    whichscenario = Dict{Tuple{Int,Int},Vector{Int}}()
+    for i in 1:noptimal
+        basiskey = (whichbasis[i,1], whichbasis[i,2])
+        whichscenario[basiskey] = get(whichscenario, basiskey, Int[])
+        push!(whichscenario[basiskey], i)
+    end
+
+    OPFScenarios(ref, m, ω, sample_ω, sample_p, colbases, rowbases, whichbasis, whichscenario)
 end
