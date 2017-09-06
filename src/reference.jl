@@ -89,7 +89,7 @@ function NetworkReference(ref::Dict{Symbol,Any};
 end
 
 NetworkReference(filename::String; kwargs...) = NetworkReference(
-    PowerModels.build_ref(PowerModels.parse_file(filename)); kwargs...
+    PowerModels.build_ref(PowerModels.parse_file(filename))[:nw][0]; kwargs...
 )
 
 "The total cost of power generation plan `p`."
