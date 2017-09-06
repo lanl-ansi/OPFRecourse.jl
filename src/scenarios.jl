@@ -10,8 +10,13 @@ mutable struct OPFScenarios
 end
 
 function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int=1000)
-    ω = Distributions.MvNormal(zeros(ref.nbus), diagm(ref.stdω)^2)
-    ωsamples = rand(ω, nsamples)
+    nonzeroindices = (1:length(ref.stdω))[ref.stdω .> 1e-5]
+    ω = Distributions.MvNormal(
+        zeros(length(nonzeroindices)),
+        diagm(ref.stdω[nonzeroindices])^2
+    )
+    ωsamples = zeros(ref.nbus, nsamples)
+    ωsamples[nonzeroindices, :] = rand(ω, nsamples)
     status = Array{Symbol}(nsamples);
     soln_p = zeros(nsamples, ref.ngen);
     JuMP.build(m.model);
