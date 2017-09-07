@@ -20,9 +20,6 @@ function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int
     ωsamples[nonzeroindices, :] = rand(ω, nsamples)
     status = Array{Symbol}(nsamples);
     soln_p = zeros(nsamples, ref.ngen);
-    JuMP.build(m.model);
-    nv = Gurobi.num_vars(m.model.internalModel.inner)
-    nc = Gurobi.num_constrs(m.model.internalModel.inner)
     cbases = Dict{Vector{Symbol},Vector{Int}}()
     rbases = Dict{Vector{Symbol},Vector{Int}}()
     noptimal = 0
