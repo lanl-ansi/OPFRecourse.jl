@@ -63,3 +63,6 @@ function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int
 
     OPFScenarios(ref, m, ω, sample_ω, sample_p, colbases, rowbases, whichbasis, whichscenario)
 end
+
+OPFScenarios(ref::NetworkReference; kwargs...) =
+    OPFScenarios(ref, SingleScenarioOPF(ref, Gurobi.GurobiSolver(OutputFlag=0)); kwargs...)
