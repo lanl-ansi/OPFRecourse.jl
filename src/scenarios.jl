@@ -23,8 +23,8 @@ function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int
     JuMP.build(m.model);
     nv = Gurobi.num_vars(m.model.internalModel.inner)
     nc = Gurobi.num_constrs(m.model.internalModel.inner)
-    cbases = Dict{NTuple{nv, Symbol},Vector{Int}}()
-    rbases = Dict{NTuple{nc, Symbol},Vector{Int}}()
+    cbases = Dict{Vector{Symbol},Vector{Int}}()
+    rbases = Dict{Vector{Symbol},Vector{Int}}()
     noptimal = 0
 
     for i in 1:nsamples
@@ -36,7 +36,6 @@ function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int
             soln_p[i,:] = JuMP.getvalue(m.p)
             noptimal += 1
             cbasis, rbasis = MathProgBase.getbasis(m.model.internalModel)
-            cbasis, rbasis = tuple(cbasis...), tuple(rbasis...)
             cbases[cbasis] = get(cbases, cbasis, Int[])
             rbases[rbasis] = get(rbases, rbasis, Int[])
             push!(cbases[cbasis], noptimal)
@@ -45,8 +44,8 @@ function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int
     end
     @assert noptimal == sum(status .== :Optimal)
 
-    sample_p = Float32.(soln_p[status .== :Optimal, :])
-    sample_ω = Float32.(ωsamples[:,status .== :Optimal])'
+    sample_p = soln_p[status .== :Optimal, :]
+    sample_ω = ωsamples[:,status .== :Optimal]'
 
     colbases = map(collect,keys(cbases))
     rowbases = map(collect,keys(rbases))
