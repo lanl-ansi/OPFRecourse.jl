@@ -24,6 +24,7 @@ function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int
     rbases = Dict{Vector{Symbol},Vector{Int}}()
     noptimal = 0
 
+    p = Progress(nsamples, 1)
     for i in 1:nsamples
         for j in eachindex(m.ω); JuMP.fix(m.ω[j], ωsamples[j,i]) end
         status[i] = JuMP.solve(m.model)
@@ -38,6 +39,7 @@ function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int
             push!(cbases[cbasis], noptimal)
             push!(rbases[rbasis], noptimal)
         end
+        next!(p)
     end
     @assert noptimal == sum(status .== :Optimal)
 
