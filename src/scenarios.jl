@@ -25,7 +25,6 @@ function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int
     nc = Gurobi.num_constrs(m.model.internalModel.inner)
     cbases = Dict{NTuple{nv, Symbol},Vector{Int}}()
     rbases = Dict{NTuple{nc, Symbol},Vector{Int}}()
-    bases = Dict{NTuple{nv+nc, Symbol},Vector{Int}}()
     noptimal = 0
 
     for i in 1:nsamples
@@ -38,13 +37,10 @@ function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int
             noptimal += 1
             cbasis, rbasis = MathProgBase.getbasis(m.model.internalModel)
             cbasis, rbasis = tuple(cbasis...), tuple(rbasis...)
-            basis = tuple(cbasis..., rbasis...)
             cbases[cbasis] = get(cbases, cbasis, Int[])
             rbases[rbasis] = get(rbases, rbasis, Int[])
-            bases[basis] = get(bases, basis, Int[])
             push!(cbases[cbasis], noptimal)
             push!(rbases[rbasis], noptimal)
-            push!(bases[basis], noptimal)
         end
     end
     @assert noptimal == sum(status .== :Optimal)
