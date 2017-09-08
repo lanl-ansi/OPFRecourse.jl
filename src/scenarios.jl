@@ -20,14 +20,11 @@ function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int
     ωsamples[nonzeroindices, :] = rand(ω, nsamples)
     status = Array{Symbol}(nsamples);
     soln_p = zeros(nsamples, ref.ngen);
-    JuMP.build(m.model);
-    nv = Gurobi.num_vars(m.model.internalModel.inner)
-    nc = Gurobi.num_constrs(m.model.internalModel.inner)
-    cbases = Dict{NTuple{nv, Symbol},Vector{Int}}()
-    rbases = Dict{NTuple{nc, Symbol},Vector{Int}}()
-    bases = Dict{NTuple{nv+nc, Symbol},Vector{Int}}()
+    cbases = Dict{Vector{Symbol},Vector{Int}}()
+    rbases = Dict{Vector{Symbol},Vector{Int}}()
     noptimal = 0
 
+    p = Progress(nsamples, 1)
     for i in 1:nsamples
         for j in eachindex(m.ω); JuMP.fix(m.ω[j], ωsamples[j,i]) end
         status[i] = JuMP.solve(m.model)
@@ -37,20 +34,17 @@ function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int
             soln_p[i,:] = JuMP.getvalue(m.p)
             noptimal += 1
             cbasis, rbasis = MathProgBase.getbasis(m.model.internalModel)
-            cbasis, rbasis = tuple(cbasis...), tuple(rbasis...)
-            basis = tuple(cbasis..., rbasis...)
             cbases[cbasis] = get(cbases, cbasis, Int[])
             rbases[rbasis] = get(rbases, rbasis, Int[])
-            bases[basis] = get(bases, basis, Int[])
             push!(cbases[cbasis], noptimal)
             push!(rbases[rbasis], noptimal)
-            push!(bases[basis], noptimal)
         end
+        next!(p)
     end
     @assert noptimal == sum(status .== :Optimal)
 
-    sample_p = Float32.(soln_p[status .== :Optimal, :])
-    sample_ω = Float32.(ωsamples[:,status .== :Optimal])'
+    sample_p = soln_p[status .== :Optimal, :]
+    sample_ω = ωsamples[:,status .== :Optimal]'
 
     colbases = map(collect,keys(cbases))
     rowbases = map(collect,keys(rbases))
@@ -69,3 +63,6 @@ function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int
 
     OPFScenarios(ref, m, ω, sample_ω, sample_p, colbases, rowbases, whichbasis, whichscenario)
 end
+
+OPFScenarios(ref::NetworkReference; kwargs...) =
+    OPFScenarios(ref, SingleScenarioOPF(ref, Gurobi.GurobiSolver(OutputFlag=0)); kwargs...)

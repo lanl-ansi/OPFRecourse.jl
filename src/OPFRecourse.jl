@@ -1,6 +1,6 @@
 module OPFRecourse
     
-    using JuMP, MathProgBase, PowerModels, JuMPChance, Distributions, Gurobi
+    using JuMP, MathProgBase, PowerModels, JuMPChance, Distributions, Gurobi, ProgressMeter
 
     export  ChanceConstrainedOPF, FullChanceConstrainedOPF, SingleScenarioOPF,
             NetworkReference, BasisRecourse, EnsembleRecourse, get_opf_solution,
