@@ -3,3 +3,5 @@
 *.jl.mem
 test/data
 notebooks/.ipynb_checkpoints
+
+*.png
