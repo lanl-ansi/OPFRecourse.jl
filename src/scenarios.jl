@@ -1,6 +1,5 @@
 mutable struct OPFScenarios
     ref::NetworkReference
-    opf::SingleScenarioOPF
     ω::Distributions.Distribution
     scenarios::Matrix{Float64} # nscenarios x nuncertain
     solutions::Matrix{Float64} # nscenarios x ngens
@@ -61,7 +60,7 @@ function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int
         push!(whichscenario[basiskey], i)
     end
 
-    OPFScenarios(ref, m, ω, sample_ω, sample_p, colbases, rowbases, whichbasis, whichscenario)
+    OPFScenarios(ref, ω, sample_ω, sample_p, colbases, rowbases, whichbasis, whichscenario)
 end
 
 OPFScenarios(ref::NetworkReference; kwargs...) =
