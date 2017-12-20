@@ -9,7 +9,11 @@ mutable struct OPFScenarios
     whichscenario::Dict{Tuple{Int,Int},Vector{Int}}
 end
 
-function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int=1000)
+function OPFScenarios(
+        ref::NetworkReference,
+        m::SingleScenarioOPF;
+        nsamples::Int=1000
+    )
     nonzeroindices = (1:length(ref.stdω))[ref.stdω .> 1e-5]
     ω = Distributions.MvNormal(
         zeros(length(nonzeroindices)),
@@ -62,6 +66,3 @@ function OPFScenarios(ref::NetworkReference, m::SingleScenarioOPF; nsamples::Int
 
     OPFScenarios(ref, ω, sample_ω, sample_p, colbases, rowbases, whichbasis, whichscenario)
 end
-
-OPFScenarios(ref::NetworkReference; kwargs...) =
-    OPFScenarios(ref, SingleScenarioOPF(ref, Gurobi.GurobiSolver(OutputFlag=0)); kwargs...)
