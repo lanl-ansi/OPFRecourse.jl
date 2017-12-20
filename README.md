@@ -103,6 +103,10 @@ ntransmissionviolations(ref, p, ω)
 nviolations(ref, p, ω)
 ```
 
-## Acknowledgments
+## Development
 
-This code has been developed as part of the Advanced Network Science Initiative at Los Alamos National Laboratory. 
+Community-driven development and enhancement of OPFRecourse.jl are welcome and encouraged. Please fork this repository and share your contributions to the master with pull requests.
+
+## License
+
+This code has been developed as part of the Advanced Network Science Initiative at Los Alamos National Laboratory, and is provided under a BSD license as part of the Multi-Infrastructure Control and Optimization Toolkit (MICOT) project, LA-CC-13-108.
