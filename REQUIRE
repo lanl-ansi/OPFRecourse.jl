@@ -2,6 +2,6 @@ julia 0.6
 Distributions
 JuMP
 MathProgBase
-PowerModels
+PowerModels 0.5
 JuMPChance
 ProgressMeter
