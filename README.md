@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/yeesian/OPFRecourse.jl.svg?branch=master)](https://travis-ci.org/yeesian/OPFRecourse.jl) [![Coverage Status](https://coveralls.io/repos/yeesian/OPFRecourse.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/yeesian/OPFRecourse.jl?branch=master) [![codecov.io](http://codecov.io/github/yeesian/OPFRecourse.jl/coverage.svg?branch=master)](http://codecov.io/github/yeesian/OPFRecourse.jl?branch=master)
 
-Package containing supplementary code for the paper "Statistical Learning For DC Optimal Power Flow".
+Package containing supplementary code for the paper "Statistical Learning For DC Optimal Power Flow" by Ng, Misra, A. Roald, and Backhaus.
 
 ## Installation Instructions
 **OPFRecourse.jl** is not a registered julia package. To install it, you should first install the following dependencies by running `Pkg.add(...)` in a Julia REPL:
@@ -84,7 +84,7 @@ would construct an ensemble of the policies by `br0`, `br1` and `br2`, falling b
 Community-driven development and enhancement of OPFRecourse.jl are welcome and encouraged. Please fork this repository and share your contributions to the master with pull requests.
 
 ## Citing OPFRecourse
-If you find OPFRecourse useful in your work, we kindly request that you cite the following technical report:
+If you find OPFRecourse useful in your work, we kindly request that you cite the following [technical report](http://arxiv.org/abs/1801.07809):
 ```
 @misc{1801.07809,
   author = {Yeesian Ng and Sidhant Misra and Line A. Roald and Scott Backhaus},
