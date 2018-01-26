@@ -14,7 +14,7 @@ function BasisRecourse(ref::NetworkReference, m::SingleScenarioOPF, cbasis, rbas
     for i in 1:ref.ngen
         if cbasis[i] == :Basic
             push!(basic_indices, i)
-        elseif cbasis[i] == :NonbasicAtLower
+        elseif cbasis[i] == :NonbasicAtLower || cbasis[i] == :Fixed
             br.fixed[i] = m.model.colLower[i]
         elseif cbasis[i] == :NonbasicAtUpper
             br.fixed[i] = m.model.colUpper[i]
@@ -35,12 +35,10 @@ function BasisRecourse(ref::NetworkReference, m::SingleScenarioOPF, cbasis, rbas
         terms = m.model.linconstr[i].terms
         if rbasis[i] !== :Basic
             c += 1
-            rhs = if rbasis[i] == :NonbasicAtLower
-                @assert m.model.internalModel.lb[i] == m.model.linconstr[i].lb
-                m.model.internalModel.lb[i]
+            rhs = if rbasis[i] == :NonbasicAtLower || rbasis[i] == :Fixed
+                m.model.linconstr[i].lb
             elseif rbasis[i] == :NonbasicAtUpper
-                @assert m.model.internalModel.ub[i] == m.model.linconstr[i].ub
-                m.model.internalModel.ub[i]
+                m.model.linconstr[i].ub
             else
                 error("Unrecognised basis status: $(rbasis[i]) at constraint $i")
             end

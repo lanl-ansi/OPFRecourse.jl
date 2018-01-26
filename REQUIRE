@@ -2,7 +2,5 @@ julia 0.6
 Distributions
 JuMP
 MathProgBase
-Gurobi
-PowerModels
-JuMPChance
+PowerModels 0.5
 ProgressMeter
