@@ -1,6 +1,5 @@
 mutable struct OPFScenarios
     ref::NetworkReference
-    ω::Distributions.Distribution
     scenarios::Matrix{Float64} # nscenarios x nuncertain
     solutions::Matrix{Float64} # nscenarios x ngens
     cbases::Vector{Vector{Symbol}} # nbasis x num_vars
@@ -9,18 +8,15 @@ mutable struct OPFScenarios
     whichscenario::Dict{Tuple{Int,Int},Vector{Int}}
 end
 
+"""
+Takes in `ωsamples` as realizations of the uncertainty
+"""
 function OPFScenarios(
         ref::NetworkReference,
-        m::SingleScenarioOPF;
-        nsamples::Int=1000
+        m::SingleScenarioOPF,
+        ωsamples::Matrix{Float64}; # nuncertain x nscenarios
     )
-    nonzeroindices = (1:length(ref.stdω))[ref.stdω .> 1e-5]
-    ω = Distributions.MvNormal(
-        zeros(length(nonzeroindices)),
-        diagm(ref.stdω[nonzeroindices])^2
-    )
-    ωsamples = zeros(ref.nbus, nsamples)
-    ωsamples[nonzeroindices, :] = rand(ω, nsamples)
+    nsamples = size(ωsamples, 2)
     status = Array{Symbol}(nsamples);
     soln_p = zeros(nsamples, ref.ngen);
     cbases = Dict{Vector{Symbol},Vector{Int}}()
@@ -64,5 +60,26 @@ function OPFScenarios(
         push!(whichscenario[basiskey], i)
     end
 
-    OPFScenarios(ref, ω, sample_ω, sample_p, colbases, rowbases, whichbasis, whichscenario)
+    OPFScenarios(ref, sample_ω, sample_p, colbases, rowbases, whichbasis, whichscenario)
+end
+
+
+"""
+Defaults to MvNormal for the uncertainty and generates nsamples wiht mean 0,
+and standard deviation given by ref.stdω
+"""
+
+function OPFScenarios(
+        ref::NetworkReference,
+        m::SingleScenarioOPF;
+        nsamples::Int=1000
+    )
+    nonzeroindices = (1:length(ref.stdω))[ref.stdω .> 1e-5]
+    ω = Distributions.MvNormal(
+        zeros(length(nonzeroindices)),
+        diagm(ref.stdω[nonzeroindices])^2
+    )
+    ωsamples = zeros(ref.nbus, nsamples)
+    ωsamples[nonzeroindices, :] = rand(ω, nsamples)
+    OPFScenarios(ref, m, ωsamples)
 end
